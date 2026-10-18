@@ -1,7 +1,9 @@
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-// A simple class to hold individual student data
 class Student {
     String name;
     double marks;
@@ -13,9 +15,15 @@ class Student {
 }
 
 public class main {
+    private static final String FILE_NAME = "students.txt";
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         ArrayList<Student> students = new ArrayList<>();
+        
+        // Load existing records from file at startup
+        loadFromFile(students);
+        
         int choice;
 
         do {
@@ -23,7 +31,7 @@ public class main {
             System.out.println("1. Add a Student");
             System.out.println("2. View All Students");
             System.out.println("3. Show Statistics (Average, Highest, Lowest)");
-            System.out.println("4. Exit");
+            System.out.println("4. Exit & Save");
             System.out.print("Enter your choice (1-4): ");
             
             choice = scanner.nextInt();
@@ -36,8 +44,10 @@ public class main {
                     System.out.print("Enter student marks (out of 100): ");
                     double marks = scanner.nextDouble();
                     
-                    students.add(new Student(name, marks));
-                    System.out.println("Student added successfully!");
+                    Student newStudent = new Student(name, marks);
+                    students.add(newStudent);
+                    saveToFile(newStudent);
+                    System.out.println("Student added and saved successfully!");
                     break;
 
                 case 2:
@@ -84,7 +94,7 @@ public class main {
                     break;
 
                 case 4:
-                    System.out.println("Exiting application. Goodbye!");
+                    System.out.println("Exiting application. All data is saved!");
                     break;
 
                 default:
@@ -93,5 +103,34 @@ public class main {
         } while (choice != 4);
 
         scanner.close();
+    }
+
+    // Save a single student to text file
+    private static void saveToFile(Student s) {
+        try (FileWriter fw = new FileWriter(FILE_NAME, true)) {
+            fw.write(s.name + "," + s.marks + "\n");
+        } catch (IOException e) {
+            System.out.println("Error saving to file: " + e.getMessage());
+        }
+    }
+
+    // Load past students from text file when app starts
+    private static void loadFromFile(ArrayList<Student> students) {
+        File file = new File(FILE_NAME);
+        if (!file.exists()) return;
+
+        try (Scanner fileScanner = new Scanner(file)) {
+            while (fileScanner.hasNextLine()) {
+                String line = fileScanner.nextLine();
+                String[] parts = line.split(",");
+                if (parts.length == 2) {
+                    String name = parts[0];
+                    double marks = Double.parseDouble(parts[1]);
+                    students.add(new Student(name, marks));
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+        }
     }
 }
